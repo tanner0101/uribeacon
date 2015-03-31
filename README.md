@@ -1,8 +1,8 @@
-## UriBeacon Swift / Objc CocoaPod
+# UriBeacon Swift / Objc CocoaPod
 
 Connect to the Physical web by using this Cocoapod to add UriBeacon functionality to your app.
 
-# Add Podfile
+## Add Podfile
 
 In your Project's directory run
 
@@ -24,7 +24,7 @@ Now download and install the Pod
 
 `pod install`
 
-# Implement UriBeacons
+## Implement UriBeacons
 
 ```swift
 
