@@ -26,6 +26,8 @@ Now download and install the Pod
 
 ## Implement UriBeacons
 
+Here is a sample View Controller
+
 ```swift
 
 //
@@ -66,3 +68,9 @@ class ViewController: UIViewController, UriBeacon.DiscoveryDelegate {
 }
 
 ```
+
+Note, you can use Google's UriBeacon SDK directly by adding
+
+`import GoogleUriBeacon`
+
+This gives you access to all of the underlying Google SDK Classes, such as UBUriBeacon, and UBUriBeaconScanner
