@@ -2,6 +2,8 @@
 
 Connect to the Physical web by using this Cocoapod to add UriBeacon functionality to your app.
 
+`pod 'UriBeacon'`
+
 ## Add Podfile
 
 In your Project's directory run
