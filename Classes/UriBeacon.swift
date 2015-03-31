@@ -1,0 +1,3 @@
+class UriBeacon {
+	var url = ""
+}
