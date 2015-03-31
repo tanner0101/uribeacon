@@ -16,7 +16,7 @@ Pod::Spec.new do |s|
   #
 
   s.name         = "UriBeacon"
-  s.version      = "0.0.1"
+  s.version      = "0.0.2"
   s.summary      = "Easily discover and interact with UriBeacons"
 
   s.description  = <<-DESC
