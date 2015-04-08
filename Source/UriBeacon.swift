@@ -1,11 +1,16 @@
 import GoogleUriBeacon
+import UIKit
 
 public protocol DiscoveryDelegate {
-    func scanner(scanner: Scanner, discoveredURI: URI)
-    func scanner(scanner: Scanner, lostURI: URI)
+    func scanner(scanner: Scanner, discoveredUri: Uri)
+    func scanner(scanner: Scanner, lostUri: Uri)
 }
 
-public class URI {
+func log(message: String) {
+    println("[UriBeacon] \(message)")
+}
+
+public class Uri: NSObject {
 
     //public methods
     public init(uriBeacon: UBUriBeacon) {
@@ -13,6 +18,60 @@ public class URI {
     }
     
     public var uri: String
+    public var title = ""
+    public var detail = ""
+    
+    //webview to receive metadata
+    var metadataReceived: (()->())?
+    var metadataWebview: UIWebView?
+    
+    public func getMetadata(done: ()->()) {
+        
+        self.title = self.uri
+        self.detail = "Tap to open"
+        
+        Uri.getMetadata(self.uri, done: { (title, detail) -> () in
+            if let title = title {
+                self.title = title
+            }
+            if let detail = detail {
+                self.detail = detail
+            }
+            done()
+        })        
+    }
+    
+    public class func getMetadata(uri: String, done: (title: String?, detail: String?) -> ()) {
+        if let url = NSURL(string: "http://narwhal.mtag.io/v1/metadata?url=\(uri)") {
+            let request = NSMutableURLRequest(URL: url)
+            NSURLConnection.sendAsynchronousRequest(request, queue: NSOperationQueue.mainQueue(), completionHandler: { response, data, error in
+                
+                var title: String?
+                var detail: String?
+                
+                if data != nil {
+                    var json: NSDictionary = NSJSONSerialization.JSONObjectWithData(data, options: nil, error: nil) as NSDictionary
+                    
+                    
+                    if let titleString = json.objectForKey("title") as? String {
+                        if titleString != "" {
+                            title = titleString
+                        }
+                    }
+                    if let detailString = json.objectForKey("description") as? String {
+                        if detailString != "" {
+                            detail = detailString
+                        }
+                    }
+                }
+                
+                done(title: title, detail: detail)
+                
+            })
+        } else {
+            done(title: nil, detail: nil)
+        }
+    }
     
     //private methods
     var importance: Int = 0
@@ -30,7 +89,7 @@ public class Scanner {
     }
     
     var uriBeaconScanner = UBUriBeaconScanner()
-    public var uris = [URI]()
+    public var uris = [Uri]()
     
     public func startScanning() {
         self.uriBeaconScanner.startScanningWithUpdateBlock({
@@ -50,10 +109,10 @@ public class Scanner {
                 }
                 
                 if !foundKnownInDiscovered {
+                    log("Lost Uri: \(knownUri.uri)")
+                    
                     self.uris.removeAtIndex( index )
-                    self.delegate.scanner(self, lostURI: knownUri)
-                    print("[UriBeacon] Lost URI: ")
-                    println(knownUri.uri)
+                    self.delegate.scanner(self, lostUri: knownUri)
                     
                 }
                 
@@ -62,7 +121,7 @@ public class Scanner {
             //Add any new beacons
             for discoveredBeacon in self.uriBeaconScanner.beacons() {
                 if let discoveredBeacon = discoveredBeacon as? UBUriBeacon {
-                    let uri = URI(uriBeacon: discoveredBeacon)
+                    let uri = Uri(uriBeacon: discoveredBeacon)
                     
                     var foundDiscoveredInKnown = false
                     for knownUri in self.uris {
@@ -72,10 +131,13 @@ public class Scanner {
                     }
                     
                     if !foundDiscoveredInKnown {
+                        log("Discovered Uri: \(uri.uri)")
+                        
                         self.uris.append( uri )
-                        self.delegate.scanner(self, discoveredURI: uri)
-                        print("[UriBeacon] Discovered URI: ")
-                        println(uri.uri)
+                        uri.getMetadata({
+                            log("Metadata received")
+                            self.delegate.scanner(self, discoveredUri: uri)
+                        })
                     }
                     
                 }
